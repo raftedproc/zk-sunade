@@ -24,17 +24,16 @@ sol! {
     }
 }
 
-#[external]
+use crate::errors::*;
+
+#[public]
 impl Verifier {
     #[allow(non_snake_case)]
-    pub fn verifyProof(words: [U256; 14]) -> Result<bool, Vec<u8>> {
-        let proof: [U256; 8] = words[0..8].try_into().unwrap();
-        let input: [U256; 6] = words[8..14].try_into().unwrap();
-
+    pub fn verifyProof(proof: [U256; 8], input: [U256; 6]) -> Result<bool, VerifierError> {
         let mut i = 0;
         while i < 8 {
             if proof[i] >= Constants.PRIME_Q() {
-                return Err("first verify".into());
+                return Err(VerifierError::PrimeVerification(PrimeVerification {}));
             }
             i += 1;
         }
@@ -60,18 +59,18 @@ impl Verifier {
             X: U256::from(0),
             Y: U256::from(0),
         };
+
         let mut vk_x = Groth16::plus(&vk_x, &verifying_key.IC[0])?;
 
         #[allow(clippy::needless_range_loop)]
         for z in 0..6 {
             if input[z] >= Constants.SNARK_SCALAR_FIELD() {
-                return Err("sunade".into());
+                return Err(VerifierError::OutsideField(OutsideField {}));
             }
             let scalarmul = Groth16::scalar_mul(&verifying_key.IC[z + 1], input[z])?;
             let val2 = Groth16::plus(&vk_x, &scalarmul)?;
             vk_x = val2;
         }
-
         Groth16::pairing(
             Groth16::negate(proof.A),
             proof.B,
@@ -87,7 +86,7 @@ impl Verifier {
 
 impl Verifier {
     #[allow(non_snake_case)]
-    pub fn verifyingKey() -> Result<VerifyingKey, Vec<u8>> {
+    pub fn verifyingKey() -> Result<VerifyingKey, VerifierError> {
         let alfa1 = G1Point {
             X: U256::from_be_bytes([
                 45, 191, 195, 236, 98, 163, 238, 229, 163, 180, 180, 100, 188, 241, 248, 82, 123,

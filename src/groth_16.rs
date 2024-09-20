@@ -1,7 +1,9 @@
-use crate::constants::{ConstantParams, Constants};
 use alloy_primitives::Address;
 use alloy_sol_types::sol;
 use stylus_sdk::{alloy_primitives::U256, call::RawCall, prelude::*};
+
+use crate::constants::{ConstantParams, Constants};
+use crate::errors::*;
 
 sol_storage! {
     pub struct Groth16 {}
@@ -35,7 +37,7 @@ impl Groth16 {
         }
     }
 
-    pub fn plus(p1: &G1Point, p2: &G1Point) -> Result<G1Point, Vec<u8>> {
+    pub fn plus(p1: &G1Point, p2: &G1Point) -> Result<G1Point, VerifierError> {
         let calldata = [p1.X, p1.Y, p2.X, p2.Y]
             .map(|i| i.to_be_bytes::<32>())
             .concat();
@@ -44,7 +46,7 @@ impl Groth16 {
             &calldata,
         );
         if call_result.is_err() {
-            return Err("plus 1 ".into());
+            return Err(VerifierError::Plus(Plus {}));
         }
         let returndata = call_result.unwrap();
         Ok(G1Point {
@@ -53,7 +55,7 @@ impl Groth16 {
         })
     }
 
-    pub fn scalar_mul(p1: &G1Point, s: U256) -> Result<G1Point, Vec<u8>> {
+    pub fn scalar_mul(p1: &G1Point, s: U256) -> Result<G1Point, VerifierError> {
         let calldata = [p1.X, p1.Y, s].map(|i| i.to_be_bytes::<32>()).concat();
         // let calldata = ;
         let call_result = RawCall::new_static().gas(u64::MAX).call(
@@ -62,7 +64,7 @@ impl Groth16 {
         );
 
         if call_result.is_err() {
-            return Err("scalar mul".into());
+            return Err(VerifierError::ScalarMulti(ScalarMulti {}));
         }
 
         let returndata = call_result.unwrap();
@@ -82,7 +84,7 @@ impl Groth16 {
         c2: G2Point,
         d1: G1Point,
         d2: G2Point,
-    ) -> Result<bool, Vec<u8>> {
+    ) -> Result<bool, VerifierError> {
         let p1 = [a1, b1, c1, d1];
         let p2 = [a2, b2, c2, d2];
 
@@ -103,8 +105,9 @@ impl Groth16 {
             Address::from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8]),
             &calldata,
         );
+
         if call_result.is_err() {
-            return Err("pairing-opcode-failed".into());
+            return Err(VerifierError::Pairing(Pairing {}));
         }
         let returndata = call_result.unwrap();
         let len = U256::from_be_bytes::<32>(returndata[0..32].try_into().unwrap());

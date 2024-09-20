@@ -3,12 +3,9 @@
 extern crate alloc;
 
 mod constants;
+mod errors;
 mod groth_16;
 mod verifier;
-
-/// Initializes a custom, global allocator for Rust programs compiled to WASM.
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 // entrypoint
 pub use verifier::*;
