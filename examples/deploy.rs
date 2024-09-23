@@ -12,7 +12,7 @@ use ethers::{
 async fn main() {
     dotenv().ok();
 
-    let rpc = "https://stylus-testnet.arbitrum.io/rpc";
+    let rpc = "https://sepolia-rollup.arbitrum.io/rpc";
     let sk = env::var("PRIVATE_KEY").unwrap();
 
     let provider = Provider::<Http>::try_from(rpc).unwrap();
@@ -27,12 +27,12 @@ async fn main() {
     // let multicall = H160::from_str("0x8738d5446f4d0a4f0819fbfd8150dd15167d5571").unwrap();
 
     let mimc_sponge = deploy(mimc_sponge_init_code(), &wallet, &provider).await;
-    // println!("mimc_sponge deployed at {:?}", mimc_sponge);
+    println!("mimc_sponge deployed at {:?}", mimc_sponge);
     // let mimc_sponge = H160::from_str("0x7e49fc9ceb9d73e866d96e8b5bbdc11953b0430a").unwrap();
 
     // let verifier = deploy(verifier_solidity_init_code(), &wallet, &provider).await;
     // println!("verifier_solidity deployed at {:?}", verifier);
-    let verifier = H160::from_str("0x921541EeE40927601E66DbF1cD20eFA2476A97D0").unwrap();
+    let verifier = H160::from_str("0x2fd549db76419c3a1fceacce692c399c00fdbab8").unwrap();
 
     let tornado_proxy = deploy(tornado_proxy_init_code(), &wallet, &provider).await;
     println!("tornado_proxy deployed at {:?}", tornado_proxy);
